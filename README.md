@@ -1,23 +1,35 @@
 # AI From Scratch - Real Mobile App
 
-A real Android app with a clean ChatGPT-style interface for your AI From Scratch project.
+ChatGPT-style Android app connected to your AI From Scratch backend.
 
-## Features
+## Repositories
 
-- Clean chat interface (similar to ChatGPT)
-- Dark mode
-- Thinking modes
-- Connects to your public AI backend
-- Works as a real installable Android app
+- **AI Backend**: https://github.com/someone405-ship-it/AI-From-Scratch
+- **This Mobile App**: https://github.com/someone405-ship-it/AI-From-Scratch-App
 
 ---
 
-## How to get the APK on your phone
+## How to connect everything
 
-### Option A – Easiest (Recommended)
+### 1. Deploy the AI backend (public link)
 
-1. Install **Expo Go** on your phone from Play Store
-2. On your computer run:
+1. Go to https://huggingface.co/spaces
+2. Create a new Space → choose **Gradio**
+3. Upload the files from the AI-From-Scratch repository
+4. Copy your public link, example:
+   ```
+   https://YOUR_USERNAME-AI-From-Scratch.hf.space
+   ```
+
+### 2. Connect the mobile app
+
+Open `src/config.js` and put your link:
+
+```js
+export const API_URL = "https://YOUR_USERNAME-AI-From-Scratch.hf.space";
+```
+
+### 3. Run the app on your phone
 
 ```bash
 git clone https://github.com/someone405-ship-it/AI-From-Scratch-App.git
@@ -26,47 +38,24 @@ npm install
 npx expo start
 ```
 
-3. Scan the QR code with Expo Go
+- Install **Expo Go** from Play Store
+- Scan the QR code
 
-### Option B – Real APK file (installable without Expo Go)
-
-```bash
-npx expo build:android
-```
-or the newer way:
+### 4. Build a real APK (optional)
 
 ```bash
 npx eas build -p android --profile preview
 ```
 
-This will give you a downloadable `.apk` file that you can install on any Android phone.
+---
+
+## Features in the app
+
+- Clean ChatGPT-style dark interface
+- Thinking modes: Fast / Balanced / Strong / Research
+- Real connection to your AI backend
+- Loading indicator while thinking
 
 ---
 
-## Connect to your AI
-
-Open `src/config.js` and put your public Hugging Face Space link (or any backend URL).
-
-Example:
-```js
-export const API_URL = "https://YOUR_USERNAME-AI-From-Scratch.hf.space";
-```
-
----
-
-## Project Structure
-
-```
-AI-From-Scratch-App/
-├── App.js
-├── src/
-│   ├── screens/ChatScreen.js
-│   ├── components/
-│   └── config.js
-├── package.json
-└── app.json
-```
-
----
-
-This is a real mobile app, not a website.
+The app is now properly connected to the AI backend.

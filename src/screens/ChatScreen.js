@@ -11,14 +11,14 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import { API_URL } from '../config';
+import { sendMessageToAI } from '../api';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I am your AI From Scratch. How can I help you today?',
+      content: 'Hello! I am your AI From Scratch.\n\nHow can I help you today?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -26,13 +26,16 @@ export default function ChatScreen() {
   const [mode, setMode] = useState('Balanced');
   const flatListRef = useRef(null);
 
+  const modes = ['Fast', 'Balanced', 'Strong', 'Research'];
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
+    const userText = input.trim();
     const userMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: userText,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -40,20 +43,12 @@ export default function ChatScreen() {
     setLoading(true);
 
     try {
-      // This is a simplified call.
-      // For full Gradio integration you would use the proper Gradio client.
-      // For now it shows the structure of a real app.
+      const result = await sendMessageToAI(userText, mode);
 
       const reply = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content:
-          'This is the real mobile app interface.\n\n' +
-          'To make it fully work:\n' +
-          '1. Deploy the AI backend to Hugging Face Spaces\n' +
-          '2. Put the public URL in src/config.js\n' +
-          '3. Connect the chat to the Gradio API\n\n' +
-          'Current mode: ' + mode,
+        content: result.reply || 'No response received.',
       };
 
       setMessages((prev) => [...prev, reply]);
@@ -61,7 +56,7 @@ export default function ChatScreen() {
       const errorMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Error connecting to the AI backend. Please check the API_URL in config.js',
+        content: `Error: ${error.message}`,
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -82,30 +77,46 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>AI From Scratch</Text>
-        <Text style={styles.headerSubtitle}>Mode: {mode}</Text>
+        <Text style={styles.headerSubtitle}>Connected to your AI</Text>
       </View>
 
+      {/* Mode selector */}
+      <View style={styles.modeRow}>
+        {modes.map((m) => (
+          <TouchableOpacity
+            key={m}
+            style={[styles.modeButton, mode === m && styles.modeButtonActive]}
+            onPress={() => setMode(m)}
+          >
+            <Text style={[styles.modeText, mode === m && styles.modeTextActive]}>{m}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Messages */}
       <FlatList
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messageList}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#a78bfa" />
+          <ActivityIndicator color="#a78bfa" size="small" />
           <Text style={styles.loadingText}>Thinking...</Text>
         </View>
       )}
 
+      {/* Input */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.inputContainer}>
           <TextInput
@@ -118,7 +129,7 @@ export default function ChatScreen() {
             maxLength={2000}
           />
           <TouchableOpacity
-            style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+            style={[styles.sendButton, (!input.trim() || loading) && styles.sendButtonDisabled]}
             onPress={sendMessage}
             disabled={!input.trim() || loading}
           >
@@ -136,11 +147,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#0f0f13',
   },
   header: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#1f1f27',
-    backgroundColor: '#0f0f13',
   },
   headerTitle: {
     color: '#fff',
@@ -149,15 +159,38 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     color: '#a78bfa',
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 2,
+  },
+  modeRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  modeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#1c1c24',
+  },
+  modeButtonActive: {
+    backgroundColor: '#8b5cf6',
+  },
+  modeText: {
+    color: '#999',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  modeTextActive: {
+    color: '#fff',
   },
   messageList: {
     padding: 16,
     paddingBottom: 20,
   },
   messageBubble: {
-    maxWidth: '82%',
+    maxWidth: '85%',
     padding: 14,
     borderRadius: 18,
     marginBottom: 12,
@@ -186,7 +219,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingBottom: 10,
   },
   loadingText: {
     color: '#a78bfa',
@@ -198,7 +231,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: '#1f1f27',
-    backgroundColor: '#0f0f13',
     alignItems: 'flex-end',
   },
   input: {
